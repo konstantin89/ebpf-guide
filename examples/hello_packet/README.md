@@ -70,6 +70,10 @@ ip link
     prog/xdp id 53
 ```
 
+To detach use:
+``` bash
+sudo bpftool net detach xdp  dev wlan0
+```
 
 ### Observe kernel logs
 ``` bash
@@ -81,4 +85,47 @@ kworker/u9:2-581     [000] d.s.1  3752.112209: bpf_trace_printk: Hello World 157
 bpftool can do the same:
 ``` bash
 bpftool prog tracelog
+```
+
+### Observe program segments
+Global variables are stored in BSS segment:
+``` bash
+$ sudo bpftool map list
+35: array  name hello_pa.bss  flags 0x400
+        key 4B  value 4B  max_entries 1  memlock 4096B
+        btf_id 24
+36: array  name hello_pa.rodata  flags 0x80
+        key 4B  value 15B  max_entries 1  memlock 4096B
+        btf_id 24  frozen
+```
+
+Print BSS segment of the program:
+(Be aware that `counter` name is shown only -g used during compilation)
+``` bash
+$ sudo bpftool map dump name hello_pa.bss
+[{
+        "value": {
+            ".bss": [{
+                    "counter": 6851
+                }
+            ]
+        }
+    }
+]
+
+```
+
+The rodata segment stores read only program data:
+``` bash
+$ sudo bpftool map dump name hello_pa.rodata
+[{
+        "value": {
+            ".rodata": [{
+                    "hello.____fmt": "Hello World %d"
+                }
+            ]
+        }
+    }
+]
+
 ```
